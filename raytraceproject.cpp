@@ -23,13 +23,62 @@ GLint normaltex;
 GLuint textureID;
 GLuint textureID2;
 Vector3f ppos(0,0,0);
+int ww = 500;
+int wh=500;
+
 
 //yaw xz (upright = PI/2), pitch zy (upright =0), roll xy (upright =0)
 Vector3f pang(PI/2,0,0);
 int keys[] = { 0,0,0,0,0,0 }; //a s w d left right
+int mouse_locked = 0;
+int mouseX;
+int mouseY;
+int warping = 0;
+void aim(int x, int y) {
+	if (mouse_locked == 1) {
+		if (warping == 0) {
+			pang(0) -= (float)(x - mouseX) / 10.0f*PI / 20;
+			pang(1) -= (float)(y - mouseY) / 10.0f*PI / 20;
+			warping = 1;
+			glutWarpPointer(ww / 2, wh / 2);
+		}
+		else {
+			warping = 0;
+		}
+		
+	}
+}
+void mouseMoved(int x, int y) {
+	aim(x, y);
+	mouseX = x;
+	mouseY = y;
+}
+void mouseDragged(int x, int y) {
+	aim(x, y);
+	mouseX = y;
+	mouseY = y;
+}
+void lockMouse() {
+	mouse_locked = 1;
+	glutSetCursor(GLUT_CURSOR_NONE);
+	std::cout << "mouse locked" << std::endl;
+	
+};
+void unlockMouse(){
+	mouse_locked = 0;
+	glutSetCursor(GLUT_CURSOR_INHERIT);
+	std::cout << "mouse unlocked" << std::endl;
+};
 
+void aim() {
+	if (mouse_locked == 1) {
+	
+	}
+}
 
 void changeSize(int w, int h) {
+	ww = w;
+	wh = h;
 	glUniform1f(locWindowWidth, (float)w);
 	glUniform1f(locWindowHeight, (float)h);
 	glViewport(0, 0, w, h);
@@ -72,6 +121,13 @@ void NormalKeyHandler(unsigned char key, int x, int y)
 		keys[2] = 1;
 	else if (key == 'd')
 		keys[3] = 1;
+	else if (key == (char)27)
+	{
+		if (mouse_locked == 1) {
+			unlockMouse();
+		}
+	
+	}
 }
 
 void SpecialKeyHandler(int key, int x, int y)
@@ -80,6 +136,8 @@ void SpecialKeyHandler(int key, int x, int y)
 		keys[5] = 1;
 	if (key == GLUT_KEY_LEFT)
 		keys[4] = 1;
+	//handle mouse unlock
+
 }
 void NormalKeyUpHandler(unsigned char key, int x, int y)
 {
@@ -99,17 +157,29 @@ void SpecialKeyUpHandler(int key, int x, int y)
 		keys[5] = 0;
 	if (key == GLUT_KEY_LEFT)
 		keys[4] = 0;
+	
 	// and so on...
 }
+void OnMouseClick(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		mouseX = x;
+		mouseY = y;
+		//capture mouse
+		if (mouse_locked == 0)
+			lockMouse();
 
+	}
+}
 void movePlayer() {
-
+	/*
 	if (keys[4] == 1) {
 		pang(0) += PI / 100;
 	}
 	if (keys[5] == 1) {
 		pang(0) -= PI / 100;
-	}
+	}*/
 	if (keys[0] == 1 || keys[1] == 1 || keys[2] == 1 || keys[3] == 1) {
 		float ang = pang(0); //yaw
 		Vector3f moveVector(0, 0, 0);
@@ -126,7 +196,7 @@ void movePlayer() {
 		if (keys[D] == 1) {
 			moveVector = Vector3f(sin(ang), 0, -cos(ang));
 		}
-		ppos += 3.0f*moveVector;
+		ppos += 6.0f*moveVector;
 	
 	}
 }
@@ -295,6 +365,10 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(NormalKeyHandler);
 	glutSpecialUpFunc(SpecialKeyUpHandler);
 	glutKeyboardUpFunc(NormalKeyUpHandler);
+	glutMouseFunc(OnMouseClick);
+	glutSetCursor(GLUT_CURSOR_INHERIT);
+	glutMotionFunc(mouseDragged);
+	glutPassiveMotionFunc(mouseMoved);
 	glutMainLoop();
 
 	return 0;

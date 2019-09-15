@@ -72,7 +72,7 @@ float comp(vec3 target, vec3 base){
 void main(){
   float x = getX();
   float y = getY();
-  vec3 ray = (rotationMatrix(vec3(0,0,1),-pang.z)*rotationMatrix(vec3(1,0,0),pang.y)*rotationMatrix(vec3(0,1,0),pang.x-PI/2)*vec4(x,y,fd,1)).xyz;
+  vec3 ray = (rotationMatrix(vec3(0,0,1),-pang.z)*rotationMatrix(vec3(0,1,0),pang.x-PI/2)*rotationMatrix(vec3(1,0,0),pang.y)*vec4(x,y,fd,1)).xyz;
   float cutoff = fd;
   for (int i=0;i<numTRs;i++){
 	vec3 A = grabData(i*3+0)-ppos;

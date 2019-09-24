@@ -2,6 +2,7 @@
 #include "Dependencies\freeglut\freeglut.h"
 #include <iostream>
 #include <GLShader.hpp>
+//Eigen library for dense vectors
 #include <Dense>
 #include <cmath>
 //3d textures!

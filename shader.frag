@@ -13,7 +13,7 @@ const float fovo2=45.0f;
 uniform vec3 ppos;
 uniform vec3 pang;
 
-
+float comp(vec3 target, vec3 base);
 mat4 rotationMatrix(vec3 axis, float angle)
 {
     axis = normalize(axis);
@@ -51,14 +51,18 @@ Vector3D intersectPoint(Vector3D rayVector, Vector3D rayPoint, Vector3D planeNor
 	return rayPoint - rayVector * prod3;
 }*/
 
-optional_intersection intersectPoint(vec3 dir, vec3 n, vec3 o) {
-	vec3 diff = -o;
+optional_intersection intersectPoint(vec3 dir, vec3 n, vec3 o, vec3 rp) {
+	vec3 diff = rp-o;
 	float prod1 = dot(diff,n);
 	float prod2 = dot(dir,n);
 	if(abs(prod2)<0.05)
 	return optional_intersection(false,vec3(0,0,0));
 	float prod3 = prod1 / prod2;
-	return optional_intersection(true,-dir * prod3);
+	vec3 result = rp-dir * prod3;
+
+	if(comp(result-rp,dir)<0.05)
+	return optional_intersection(false,vec3(0,0,0));
+	return optional_intersection(true,result);
 }
 
 float angle(vec3 a, vec3 b){
@@ -68,27 +72,28 @@ float comp(vec3 target, vec3 base){
 
 	return dot(target,base)/length(base);
 }
+vec3 proj(vec3 target,vec3 base){
+	return comp(target,base)*normalize(base);
+}
 
-void main(){
-  float x = getX();
-  float y = getY();
-  vec3 ray = (rotationMatrix(vec3(0,0,1),-pang.z)*rotationMatrix(vec3(0,1,0),pang.x-PI/2)*rotationMatrix(vec3(1,0,0),pang.y)*vec4(x,y,fd,1)).xyz;
+
+optional_intersection intersectTriangles(vec3 rayPoint, vec3 ray){
+  optional_intersection retvalue=optional_intersection(false,vec3(0,0,0));
   float cutoff = fd;
   for (int i=0;i<numTRs;i++){
-	vec3 A = grabData(i*3+0)-ppos;
-	vec3 B = grabData(i*3+1)-ppos;
-	vec3 C = grabData(i*3+2)-ppos;
+	
+	vec3 A = grabData(i*3+0);
+	vec3 B = grabData(i*3+1);
+	vec3 C = grabData(i*3+2);
 	//vec3 n = cross(C-A,B-A);
 	vec3 n = grabNormal(i);
-	optional_intersection isec = intersectPoint(ray,n,A);
+	optional_intersection isec = intersectPoint(ray,n,A,rayPoint);
 	if(!isec.intersected)
 		continue;
 	else
 	{
 		vec3 pt = isec.pt;
-		//if(angle(pt,ray)>fovo2)
-			//continue;
-		if(comp(pt,ray)>fog-5||comp(pt,ray)<0.05)
+		if(comp(pt-rayPoint,ray)>fog-5||comp(pt-rayPoint,ray)<0.05)
 			continue;
 
 
@@ -116,9 +121,13 @@ void main(){
 		if(failures>0)
 		continue;
 
-		if(length(pt)<cutoff){
-			cutoff=length(pt);
-			color = vec3(1-length(pt)/fog,1-length(pt)/fog,1-length(pt)/fog);
+		if(length(pt-rayPoint)<cutoff){
+			cutoff=length(pt-rayPoint);
+
+			retvalue = optional_intersection(true,pt);
+
+
+			
 		}else{
 			continue;
 		}
@@ -126,8 +135,33 @@ void main(){
 	
 	
 
-
+	
   }
   if(cutoff>=fd)
+		return optional_intersection(false,vec3(0,0,0));
+   return retvalue;
+}
+
+
+
+
+
+
+void main(){
+  float x = getX();
+  float y = getY();
+  vec3 ray = (rotationMatrix(vec3(0,0,1),-pang.z)*rotationMatrix(vec3(0,1,0),pang.x-PI/2)*rotationMatrix(vec3(1,0,0),pang.y)*vec4(x,y,fd,1)).xyz;
+	optional_intersection worldresult = intersectTriangles(ppos,ray);
+  if(worldresult.intersected==false)
 		discard;
+		else{
+
+
+			optional_intersection lightresult = intersectTriangles(worldresult.pt,vec3(0,50,0)-worldresult.pt);
+			if(!lightresult.intersected)
+			color  = vec3(1,0,0);
+			else
+			color=vec3(0,0,1);
+		}
+		
 }

@@ -4,6 +4,7 @@
 #include <GLShader.hpp>
 #include <Dense>
 #include <cmath>
+//3d textures!
 //note bounce
 //reflected = incident - 2(incident dot N)*N
 //rule basic shadows, occlusion si the same, but if bounced ray does not intersect a light plane, then it is in shadow
@@ -319,6 +320,13 @@ int main(int argc, char **argv)
 
 	//west wall tr2
 	-dist,-dist * wallAspect,-dist,     -dist,-dist * wallAspect,dist,     -dist,dist*wallAspect,-dist,
+
+
+	//ceiling tr1
+	
+	-dist/1.0f, 35, -dist/1.0f,   -dist / 1.0f, 35, dist / 1.0f,   dist / 1.0f, 35, dist / 1.0f,
+
+	-dist / 1.0f, 35, -dist / 1.0f,   dist / 1.0f, 35, -dist / 1.0f,   dist / 1.0f, 35, dist / 1.0f,
 
 	};
 

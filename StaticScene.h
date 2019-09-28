@@ -4,6 +4,9 @@
 
 using namespace Eigen;
 
-namespace Engine::Scenes;
+namespace Engine {
+	namespace Scene {
+		class StaticScene;
+	}
 
-class StaticScene;
+}

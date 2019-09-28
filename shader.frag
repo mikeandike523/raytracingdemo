@@ -16,8 +16,12 @@ const float PI = 3.1415926535897932384626433832795;
 const float fovo2=45.0f;
 uniform vec3 ppos;
 uniform vec3 pang;
+uniform mat4 rotMatrix3;
+uniform mat4 rotMatrix2;
+uniform mat4 rotMatrix1;
 
 float comp(vec3 target, vec3 base);
+/*
 mat4 rotationMatrix(vec3 axis, float angle)
 {
     axis = normalize(axis);
@@ -29,7 +33,7 @@ mat4 rotationMatrix(vec3 axis, float angle)
                 oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
                 oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
                 0.0,                                0.0,                                0.0,                                1.0);
-}
+}*/
 struct optional_intersection{bool intersected;vec3 pt;};
 struct light{vec3 position; vec3 rgb; float intensityFactor;float ambientEstimator;float ambientCutoffRadius;};
 vec3 grabData(int i){
@@ -158,7 +162,8 @@ optional_intersection intersectTriangles(vec3 rayPoint, vec3 ray){
 void main(){
   float x = getX();
   float y = getY();
-  vec3 ray = (rotationMatrix(vec3(0,0,1),-pang.z)*rotationMatrix(vec3(0,1,0),pang.x-PI/2)*rotationMatrix(vec3(1,0,0),pang.y)*vec4(x,y,fd,1)).xyz;
+  //vec3 ray = (rotationMatrix(vec3(0,0,1),-pang.z)*rotationMatrix(vec3(0,1,0),pang.x-PI/2)*rotationMatrix(vec3(1,0,0),pang.y)*vec4(x,y,fd,1)).xyz;
+    vec3 ray = (rotMatrix3*rotMatrix2*rotMatrix1*vec4(x,y,fd,1)).xyz;
 	optional_intersection worldresult = intersectTriangles(ppos,ray);
   if(worldresult.intersected==false)
 		discard;

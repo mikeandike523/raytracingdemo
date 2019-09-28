@@ -5,6 +5,7 @@
 //Eigen library for dense vectors
 #include <Dense>
 #include <cmath>
+#include <Engine/Geometry.h>
 //3d textures!
 //note bounce
 //reflected = incident - 2(incident dot N)*N
@@ -27,6 +28,8 @@ GLuint textureID2;
 GLuint textureID3;
 GLuint numLights;
 GLuint lighttex;
+GLint rotMatrix3, rotMatrix2, rotMatrix1;
+Matrix4f m3, m2, m1;
 Vector3f ppos(0,0,0);
 int ww = 500;
 int wh=500;
@@ -42,10 +45,33 @@ int warping = 0;
 void aim(int x, int y) {
 	if (mouse_locked == 1) {
 		if (warping == 0) {
-			pang(0) -= (float)(x - mouseX) / 10.0f*PI / 20;
-			pang(1) -= (float)(y - mouseY) / 10.0f*PI / 20;
-			warping = 1;
-			glutWarpPointer(ww / 2, wh / 2);
+
+	
+				pang(0) -= (float)(x - mouseX) / 20.0f*PI / 10;
+				pang(1) -= (float)(y - mouseY) / 20.0f*PI / 10;
+				if (pang(1) > PI / 4)
+					pang(1) = PI / 4;
+				if (pang(1) < -PI / 4)
+					pang(1) = -PI / 4;
+
+
+				m3 = Engine::Geometry::createRotationMatrix(Vector3f(0, 0, 1), -pang(2));
+	m2 = Engine::Geometry::createRotationMatrix(Vector3f(0, 1, 0), pang(0) - PI / 2);
+	m1 = Engine::Geometry::createRotationMatrix(Vector3f(1, 0, 0), pang(1));
+
+	glUniformMatrix4fv(rotMatrix3, 1, true, m3.data());
+	glUniformMatrix4fv(rotMatrix2, 1, true, m2.data());
+	glUniformMatrix4fv(rotMatrix1, 1, true, m1.data());
+
+
+
+
+
+
+				
+					warping = 1;
+					glutWarpPointer(ww / 2, wh / 2);
+				
 		}
 		else {
 			warping = 0;
@@ -91,8 +117,10 @@ void changeSize(int w, int h) {
 void renderScene(void)
 {
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -273,6 +301,10 @@ int main(int argc, char **argv)
 	worldtex = glGetUniformLocation(program, "worldtex");
 	numLights = glGetUniformLocation(program, "numLights");
 	lighttex = glGetUniformLocation(program, "lighttex");
+	rotMatrix3 = glGetUniformLocation(program, "rotMatrix3");
+	rotMatrix2 = glGetUniformLocation(program, "rotMatrix2");
+	rotMatrix1 = glGetUniformLocation(program, "rotMatrix1");
+
 	std::cout << "aaa "<<normaltex<<std::endl;
 	glUseProgram(program);
 
@@ -388,11 +420,11 @@ int main(int argc, char **argv)
 	//later step: precalculate rotation amtrices for rays
 
 	float lights[]{
-		0,100,0,  1,1,0.5,   2000,0.4,10000,
+		0,100,0,  1,1,0.5,   2000,0.4,500,
+		
+		-25,100,0,  0.5,0,1,   1000,0.3,500,
 
-		-25,100,0,  0.5,0,1,   1000,0.3,10000,
-
-		25,100,75,  0.2,0.9,0,   1000,0.3,10000,
+		25,100,75,  0.2,0.9,0,   1000,0.3,500,
 	};
 
 	glActiveTexture(GL_TEXTURE2);
@@ -406,6 +438,13 @@ int main(int argc, char **argv)
 
 	glUniform1i(numLights, sizeof(lights) / (sizeof(GLfloat) * 9));
 
+	m3 = Engine::Geometry::createRotationMatrix(Vector3f(0, 0, 1), -pang(2));
+	m2 = Engine::Geometry::createRotationMatrix(Vector3f(0, 1, 0), pang(0) - PI / 2);
+	m1 = Engine::Geometry::createRotationMatrix(Vector3f(1, 0, 0), pang(1));
+
+	glUniformMatrix4fv(rotMatrix3, 1, true, m3.data());
+	glUniformMatrix4fv(rotMatrix2, 1, true, m2.data());
+	glUniformMatrix4fv(rotMatrix1, 1, true, m1.data());
 
 	//success
 	glutTimerFunc(1000.0 / 60.0, timer, 0);

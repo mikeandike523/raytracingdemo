@@ -3,10 +3,12 @@
 #include <Dense>
 
 using namespace Eigen;
+namespace Engine {
+	namespace Scene {
+		class StaticScene {
 
-namespace Engine::Scenes;
 
-class StaticScene {
+		};
+	}
 
-
-};
+}

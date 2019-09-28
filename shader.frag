@@ -5,9 +5,13 @@ uniform float windowHeight;
 uniform float baseRuler;
 uniform sampler2D worldtex;
 uniform sampler2D normaltex;
+uniform sampler2D lighttex;
+//light: position, red, green, blue, intensityFactor
+uniform int numLights;
 uniform int numTRs;
+//const vec3 ambient = vec3(0.5,0.5,0.5);
 const float fd = 1000;
-const float fog = 700;
+const float fog = 100000;
 const float PI = 3.1415926535897932384626433832795;
 const float fovo2=45.0f;
 uniform vec3 ppos;
@@ -27,12 +31,16 @@ mat4 rotationMatrix(vec3 axis, float angle)
                 0.0,                                0.0,                                0.0,                                1.0);
 }
 struct optional_intersection{bool intersected;vec3 pt;};
-
+struct light{vec3 position; vec3 rgb; float intensityFactor;float ambientEstimator;float ambientCutoffRadius;};
 vec3 grabData(int i){
 	return texelFetch(worldtex,ivec2(i,0),0).xyz;
 }
 vec3 grabNormal(int i){
 	return texelFetch(normaltex,ivec2(i,0),0).xyz;
+}
+
+light grabLight(int i){
+	return light(texelFetch(lighttex,ivec2(i*3+0,0),0).xyz,texelFetch(lighttex,ivec2(i*3+1,0),0).xyz,texelFetch(lighttex,ivec2(i*3+2,0),0).x,texelFetch(lighttex,ivec2(i*3+2,0),0).y,texelFetch(lighttex,ivec2(i*3+2,0),0).z);
 }
 float getX(){
 	float offset = gl_FragCoord.x-windowWidth/2;
@@ -79,7 +87,7 @@ vec3 proj(vec3 target,vec3 base){
 
 optional_intersection intersectTriangles(vec3 rayPoint, vec3 ray){
   optional_intersection retvalue=optional_intersection(false,vec3(0,0,0));
-  float cutoff = fd;
+  float cutoff = fog;
   for (int i=0;i<numTRs;i++){
 	
 	vec3 A = grabData(i*3+0);
@@ -137,7 +145,7 @@ optional_intersection intersectTriangles(vec3 rayPoint, vec3 ray){
 
 	
   }
-  if(cutoff>=fd)
+  if(cutoff>=fog)
 		return optional_intersection(false,vec3(0,0,0));
    return retvalue;
 }
@@ -155,13 +163,20 @@ void main(){
   if(worldresult.intersected==false)
 		discard;
 		else{
-
-
-			optional_intersection lightresult = intersectTriangles(worldresult.pt,vec3(0,50,0)-worldresult.pt);
-			if(!lightresult.intersected)
-			color  = vec3(1,0,0);
-			else
-			color=vec3(0,0,1);
+			color=vec3(0,0,0);
+			for(int i=0;i<numLights;i++){
+				light lght = grabLight(i); 
+				optional_intersection lightresult = intersectTriangles(worldresult.pt,lght.position-worldresult.pt);
+				if(!lightresult.intersected)
+				color += ((1-pow(length(worldresult.pt-lght.position)/lght.intensityFactor,2))*lght.rgb);
+				else{
+					if(length(worldresult.pt-lght.position)<lght.ambientCutoffRadius)
+					color+=lght.rgb*lght.ambientEstimator;
+					else
+					color+=vec3(0,0,0);
+				}
+			}
+			color/=numLights;
 		}
 		
 }

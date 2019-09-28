@@ -24,6 +24,9 @@ GLint worldtex;
 GLint normaltex;
 GLuint textureID;
 GLuint textureID2;
+GLuint textureID3;
+GLuint numLights;
+GLuint lighttex;
 Vector3f ppos(0,0,0);
 int ww = 500;
 int wh=500;
@@ -268,6 +271,8 @@ int main(int argc, char **argv)
 	pangLoc = glGetUniformLocation(program, "pang");
 	normaltex = glGetUniformLocation(program, "normaltex");
 	worldtex = glGetUniformLocation(program, "worldtex");
+	numLights = glGetUniformLocation(program, "numLights");
+	lighttex = glGetUniformLocation(program, "lighttex");
 	std::cout << "aaa "<<normaltex<<std::endl;
 	glUseProgram(program);
 
@@ -275,6 +280,7 @@ int main(int argc, char **argv)
 
 	glUniform1i(normaltex, 1);
 	glUniform1i(worldtex, 0);
+	glUniform1i(lighttex, 2);
 	glUniform1f(locWindowWidth, 500.0f);
 	glUniform1f(locWindowHeight, 500.0f);
 	glUniform1f(baseRuler, 1.0f); //set to initial window size, base ruler can be used as a zoom factor
@@ -285,7 +291,7 @@ int main(int argc, char **argv)
 	glGenTextures(1, &textureID);
 
 	glGenTextures(1, &textureID2);
-	
+	glGenTextures(1, &textureID3);
 	glActiveTexture(GL_TEXTURE0);
 	
 	glBindTexture(GL_TEXTURE_2D, textureID);
@@ -293,7 +299,7 @@ int main(int argc, char **argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	const float dist = 200.0f;
+	const float dist = 500.0f;
 	const float wallAspect = 1.0f / 8.0f;
 	GLfloat pixels[] = {
 		 //north wall tr1
@@ -325,9 +331,20 @@ int main(int argc, char **argv)
 
 	//ceiling tr1
 	
-	-dist/1.0f, 35, -dist/1.0f,   -dist / 1.0f, 35, dist / 1.0f,   dist / 1.0f, 35, dist / 1.0f,
+	-dist/1.0f, -dist*wallAspect, -dist/1.0f,   -dist / 1.0f, -dist*wallAspect, dist / 1.0f,   dist / 1.0f, -dist*wallAspect, dist / 1.0f,
 
-	-dist / 1.0f, 35, -dist / 1.0f,   dist / 1.0f, 35, -dist / 1.0f,   dist / 1.0f, 35, dist / 1.0f,
+	-dist / 1.0f, -dist*wallAspect, -dist / 1.0f,   dist / 1.0f, -dist*wallAspect, -dist / 1.0f,   dist / 1.0f, -dist*wallAspect, dist / 1.0f,
+
+
+
+	//ceiling tr1
+
+	-dist / 10.0f, dist * wallAspect/2.0f, -dist / 10.0f,   -dist / 10.0f, dist * wallAspect/2.0f, dist / 10.0f,   dist / 10.0f, dist * wallAspect/2.0f, dist / 10.0f,
+
+	-dist / 10.0f, dist * wallAspect/2.0f, -dist / 10.0f,   dist / 10.0f, dist * wallAspect/2.0f, -dist / 10.0f,   dist / 10.0f, dist * wallAspect/2.0f, dist / 10.0f,
+
+
+
 
 	};
 
@@ -366,6 +383,28 @@ int main(int argc, char **argv)
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, sizeof(normals) / (sizeof(GLfloat) * 3), 1, 0, GL_RGB, GL_FLOAT, normals);
 
+
+
+	//later step: precalculate rotation amtrices for rays
+
+	float lights[]{
+		0,100,0,  1,1,0.5,   2000,0.4,10000,
+
+		-25,100,0,  0.5,0,1,   1000,0.3,10000,
+
+		25,100,75,  0.2,0.9,0,   1000,0.3,10000,
+	};
+
+	glActiveTexture(GL_TEXTURE2);
+
+	glBindTexture(GL_TEXTURE_2D, textureID3);
+	glEnable(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, sizeof(lights) / (sizeof(GLfloat)*3), 1, 0, GL_RGB, GL_FLOAT, lights);
+
+	glUniform1i(numLights, sizeof(lights) / (sizeof(GLfloat) * 9));
 
 
 	//success

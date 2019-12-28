@@ -34,8 +34,8 @@ Matrix4f m3, m2, m1;
 Vector3f ppos(0,0,0);
 float aimX = 0;
 float aimY = 0;
-int ww = 500;
-int wh=500;
+int ww = 640;
+int wh=480;
 
 
 //yaw xz (upright = PI/2), pitch zy (upright =0), roll xy (upright =0)
@@ -105,7 +105,7 @@ void mouseDragged(int x, int y) {
 }
 void lockMouse() {
 	mouse_locked = 1;
-	//glutSetCursor(GLUT_CURSOR_NONE);
+	glutSetCursor(GLUT_CURSOR_NONE);
 	std::cout << "mouse locked" << std::endl;
 	
 };
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(-1, -1);
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(640, 480);
 	glutCreateWindow("OpenGL First Window");
 
 	glewInit();
@@ -308,13 +308,14 @@ int main(int argc, char **argv)
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	static const GLfloat g_vertex_buffer_data[] = {
-		 
-		  -250.0f, 250.0f, 0.0f,
-		-250.0f, -250.0f, 0.0f,
-		   250.0f,  250.0f, 0.0f,
-		   250.0f,-250.0f,0.0f
-	}; 
+	GLfloat g_vertex_buffer_data[] = {
+
+		  -ww / 2, ww / 2, 0.0f,
+		-ww / 2, -ww / 2, 0.0f,
+		   ww / 2,  ww / 2, 0.0f,
+		   ww / 2,-ww / 2,0.0f
+	};
+
 
 
 

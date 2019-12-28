@@ -14,6 +14,7 @@ using namespace Eigen;
 // This will identify our vertex buffer
 const float PI = 3.1415926535897932384626433832795;
 const int A = 0, S = 1, W = 2, D = 3;
+GLuint VertexArrayID;
 GLuint vertexbuffer;
 GLint locWindowWidth;
 GLint locWindowHeight;
@@ -31,6 +32,8 @@ GLuint lighttex;
 GLint rotMatrix3, rotMatrix2, rotMatrix1;
 Matrix4f m3, m2, m1;
 Vector3f ppos(0,0,0);
+float aimX = 0;
+float aimY = 0;
 int ww = 500;
 int wh=500;
 
@@ -42,20 +45,24 @@ int mouse_locked = 0;
 int mouseX;
 int mouseY;
 int warping = 0;
+
+
+
+
 void aim(int x, int y) {
 	if (mouse_locked == 1) {
 		if (warping == 0) {
 
 	
-				pang(0) -= (float)(x - mouseX) / 20.0f*PI / 10;
-				pang(1) -= (float)(y - mouseY) / 20.0f*PI / 10;
+				pang(0) = aimX-(float)(x - ww/2) *2*PI / ww;
+				pang(1) = aimY-(float)(y - wh/2) *2*PI / ww;
 				if (pang(1) > PI / 4)
 					pang(1) = PI / 4;
 				if (pang(1) < -PI / 4)
 					pang(1) = -PI / 4;
 
 
-				m3 = Engine::Geometry::createRotationMatrix(Vector3f(0, 0, 1), -pang(2));
+	m3 = Engine::Geometry::createRotationMatrix(Vector3f(0, 0, 1), -pang(2));
 	m2 = Engine::Geometry::createRotationMatrix(Vector3f(0, 1, 0), pang(0) - PI / 2);
 	m1 = Engine::Geometry::createRotationMatrix(Vector3f(1, 0, 0), pang(1));
 
@@ -68,9 +75,12 @@ void aim(int x, int y) {
 
 
 
-				
-					warping = 1;
-					glutWarpPointer(ww / 2, wh / 2);
+	if (abs(x-ww/2)>ww/4||abs(y-wh/2)>wh/4) {
+		warping = 1;
+		glutWarpPointer(ww / 2, wh / 2);
+		aimX = pang(0);
+		aimY = pang(1);
+	}
 				
 		}
 		else {
@@ -81,17 +91,21 @@ void aim(int x, int y) {
 }
 void mouseMoved(int x, int y) {
 	aim(x, y);
-	mouseX = x;
-	mouseY = y;
+	//mouseX = x;
+	//mouseY = y;
+	mouseX = ww / 2;
+	mouseY = wh / 2;
 }
 void mouseDragged(int x, int y) {
 	aim(x, y);
-	mouseX = y;
-	mouseY = y;
+	//mouseX = y;
+	//mouseY = y;
+	mouseX = ww / 2;
+	mouseY = wh / 2;
 }
 void lockMouse() {
 	mouse_locked = 1;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	//glutSetCursor(GLUT_CURSOR_NONE);
 	std::cout << "mouse locked" << std::endl;
 	
 };
@@ -101,11 +115,7 @@ void unlockMouse(){
 	std::cout << "mouse unlocked" << std::endl;
 };
 
-void aim() {
-	if (mouse_locked == 1) {
-	
-	}
-}
+
 
 void changeSize(int w, int h) {
 	ww = w;
@@ -113,6 +123,27 @@ void changeSize(int w, int h) {
 	glUniform1f(locWindowWidth, (float)w);
 	glUniform1f(locWindowHeight, (float)h);
 	glViewport(0, 0, w, h);
+	
+
+	glBindVertexArray(VertexArrayID);
+
+	GLfloat g_vertex_buffer_data[] = {
+
+		  -ww/2, ww/2, 0.0f,
+		-ww/2, -ww/2, 0.0f,
+		   ww/2,  ww/2, 0.0f,
+		   ww/2,-ww/2,0.0f
+	};
+
+
+
+
+
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+
+
 }
 void renderScene(void)
 {
@@ -197,11 +228,17 @@ void OnMouseClick(int button, int state, int x, int y)
 {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		mouseX = x;
-		mouseY = y;
+		//mouseX = x;
+		//mouseY = y;
+		
 		//capture mouse
-		if (mouse_locked == 0)
+		if (mouse_locked == 0) {
 			lockMouse();
+			mouseX = ww / 2;
+			mouseY = wh / 2;
+			glutWarpPointer(ww / 2, wh / 2);
+			warping = 1;
+		}
 
 	}
 }
@@ -267,7 +304,7 @@ int main(int argc, char **argv)
 	glutDisplayFunc(renderScene);
 	glutReshapeFunc(changeSize);
 	glViewport(0, 0, 500, 500);
-	GLuint VertexArrayID;
+
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
@@ -420,11 +457,11 @@ int main(int argc, char **argv)
 	//later step: precalculate rotation amtrices for rays
 
 	float lights[]{
-		0,100,0,  1,1,0.5,   2000,0.4,500,
+		0,100,0,  1,1,0.5,   2000,0.6,1000,
 		
-		-25,100,0,  0.5,0,1,   1000,0.3,500,
+		-25,100,0,  0.5,0,1,   1000,0.2,1000,
 
-		25,100,75,  0.2,0.9,0,   1000,0.3,500,
+		25,100,75,  0.2,0.9,0,   1000,0.8,1000,
 	};
 
 	glActiveTexture(GL_TEXTURE2);
@@ -456,6 +493,7 @@ int main(int argc, char **argv)
 	glutSetCursor(GLUT_CURSOR_INHERIT);
 	glutMotionFunc(mouseDragged);
 	glutPassiveMotionFunc(mouseMoved);
+	
 	glutMainLoop();
 
 	return 0;

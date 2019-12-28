@@ -19,6 +19,7 @@ uniform vec3 pang;
 uniform mat4 rotMatrix3;
 uniform mat4 rotMatrix2;
 uniform mat4 rotMatrix1;
+const vec3 ambient= vec3(0.5,0.5,0.5);
 
 float comp(vec3 target, vec3 base);
 /*
@@ -176,9 +177,7 @@ void main(){
 				color += ((1-pow(length(worldresult.pt-lght.position)/lght.intensityFactor,2))*lght.rgb);
 				else{
 					if(length(worldresult.pt-lght.position)<lght.ambientCutoffRadius)
-					color+=lght.rgb*lght.ambientEstimator;
-					else
-					color+=vec3(0,0,0);
+					color+=lght.ambientEstimator*lght.rgb;
 				}
 			}
 			color/=numLights;
